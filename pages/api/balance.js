@@ -5,9 +5,24 @@ export default function balanceRoute(req, res) {
   if (req.method === "GET") {
     //check authentication
     const user = checkToken(req);
+    if (!user)
+      return res.status(403).json({
+        ok: false,
+        message: "You do not have permission to check balance",
+      });
     // return res.status(403).json({ok: false,message: "You do not have permission to check balance",});
 
     const users = readUsersDB();
+    const foundUser = users.find(
+      (x) => x.checkToken === checkToken(req) && x.money === money
+    );
+    if (!foundUser)
+      return res.status(403).json({
+        ok: false,
+        message: "You do not have permission to check balance",
+      });
+    else return res.json({ ok: true, money: money });
+
     //find user in DB and get their money value
 
     //return response

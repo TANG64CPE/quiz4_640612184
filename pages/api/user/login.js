@@ -5,7 +5,6 @@ import bcrypt from "bcrypt";
 export default function loginRoute(req, res) {
   if (req.method === "POST") {
     const { username, password } = req.body;
-    //validate body
     if (
       typeof username !== "string" ||
       username.length === 0 ||
@@ -17,11 +16,27 @@ export default function loginRoute(req, res) {
         .json({ ok: false, message: "Username or password cannot be empty" });
 
     const users = readUsersDB();
+    const foundUser = users.find(
+      (x) => x.username === username && bcrypt.compareSync(password, x.password)
+    );
+    if (!foundUser)
+      return res
+        .status(400)
+        .json({ ok: false, message: "Invalid Username or Password!!" });
+
     //find user with username & password
 
     // return res.status(400).json({ ok: false, message: "Invalid Username or Password" });
-
     const secret = process.env.JWT_SECRET;
+    const token = jwt.sign(
+      {
+        username: foundUser.username,
+        isAdmin: foundUser.isAdmin,
+      },
+      secret,
+      { expiresIn: "1800s" }
+    );
+    return res.json({ ok: true, username: username, isAdmin: true, token });
     //create token and return response
   } else {
     return res.status(400).json({ ok: false, message: "Invalid HTTP Method" });
